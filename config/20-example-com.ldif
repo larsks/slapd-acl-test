@@ -1,0 +1,75 @@
+dn: dc=r1,dc=internal
+objectClass: organization
+objectClass: dcObject
+o: r1.internal
+dc: r1
+
+# password is "secret"
+dn: cn=manager,dc=r1,dc=internal
+objectClass: organizationalPerson
+objectClass: simpleSecurityObject
+cn: manager
+sn: manager
+userPassword: {SSHA}OHuOWLPQsG/zqXXviJ9gFcpgEW7BsH9Y
+
+dn: ou=users,dc=r1,dc=internal
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=groups,dc=r1,dc=internal
+objectClass: organizationalUnit
+ou: groups
+
+dn: ou=system,dc=r1,dc=internal
+objectClass: organizationalUnit
+ou: system
+
+# password is "secret1"
+dn: cn=user1,ou=users,dc=r1,dc=internal
+objectClass: organizationalPerson
+objectClass: simpleSecurityObject
+cn: user1
+sn: user1
+userPassword:: e1NTSEF9bE5ubjA0OGY1VEZNcWpiL2hXYU1pYlltNUxhdkRGdEs=
+
+# password is "secret2"
+dn: cn=user2,ou=users,dc=r1,dc=internal
+objectClass: organizationalPerson
+objectClass: simpleSecurityObject
+cn: user2
+userPassword:: e1NTSEF9dk5FVW8xTTQyYUc5dzRwMXp3TWtqWTIrN3hVemVPZUY=
+sn: user2
+
+dn: cn=root,ou=groups,dc=r1,dc=internal
+cn: admins
+cn: root
+objectClass: groupOfUniqueNames
+uniqueMember: cn=user1,ou=users,dc=r1,dc=internal
+
+# password is "secret"
+dn: uid=sssd,ou=system,dc=r1,dc=internal
+objectClass: organizationalPerson
+objectClass: simpleSecurityObject
+objectClass: uidObject
+cn: sssd
+sn: sssd
+userPassword:: e1NTSEF9V0FWZm9uamYyRmxxQzFRV29uMmk1Ny9ySHpuZ1JJV1A=
+uid: sssd
+
+dn: ou=nested,ou=users,dc=r1,dc=internal
+objectClass: organizationalUnit
+ou: nested
+
+dn: cn=testuser,ou=nested,ou=users,dc=r1,dc=internal
+objectClass: organizationalPerson
+cn: testuser
+sn: testuser
+
+dn: ou=nested,ou=groups,dc=r1,dc=internal
+objectClass: organizationalUnit
+ou: nested
+
+dn: cn=testgroup,ou=nested,ou=groups,dc=r1,dc=internal
+objectClass: organizationalPerson
+cn: testgroup
+sn: testgroup

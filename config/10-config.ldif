@@ -1,0 +1,69 @@
+dn: cn=module,cn=config
+objectClass: olcModuleList
+cn: module
+olcModulePath: /usr/lib/openldap
+olcModuleLoad: back_mdb.so
+
+dn: olcDatabase=mdb,cn=config
+objectClass: olcDatabaseConfig
+objectClass: olcMdbConfig
+olcDatabase: mdb
+olcSuffix: dc=r1,dc=internal
+olcRootDN: cn=manager,dc=r1,dc=internal
+olcRootPW:: c2VjcmV0
+olcDbDirectory: /var/lib/openldap/r1.internal
+# root and cn=manager have manage access
+olcAccess: to *
+  by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" manage
+  by dn.exact="cn=manager,dc=r1,dc=internal" manage
+  by * break
+# root and members of cn=root group can access everything
+olcAccess: to dn.subtree="dc=r1,dc=internal"
+  by anonymous break
+  by group/groupOfUniqueNames/uniqueMember="cn=root,ou=groups,dc=r1,dc=internal" write
+  by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" write
+  by * break
+# sssd user can read all users
+olcAccess: to dn.base="ou=users,dc=r1,dc=internal"
+  by dn.exact="uid=sssd,ou=system,dc=r1,dc=internal" read
+  by * break
+olcAccess: to dn.one="ou=users,dc=r1,dc=internal"
+  by dn.exact="uid=sssd,ou=system,dc=r1,dc=internal" read
+  by * break
+# sssd user can read all groups
+olcAccess: to dn.base="ou=groups,dc=r1,dc=internal"
+  by dn.exact="uid=sssd,ou=system,dc=r1,dc=internal" read
+  by * break
+olcAccess: to dn.one="ou=groups,dc=r1,dc=internal"
+  by dn.exact="uid=sssd,ou=system,dc=r1,dc=internal" read
+  by * break
+# self can modify password, anon can authenticate
+olcAccess: to dn.subtree="dc=r1,dc=internal"
+  attrs=userPassword
+  by self write
+  by anonymous auth
+  by * none
+# anonymous can read selected user attributes
+olcAccess: to dn.base="ou=users,dc=r1,dc=internal"
+  by anonymous search
+  by * break
+olcAccess: to dn.one="ou=users,dc=r1,dc=internal"
+  attrs=entry,cn,uid,sn
+  by anonymous read
+  by * break
+# anonymous can read selected group attributes
+olcAccess: to dn.base="ou=groups,dc=r1,dc=internal"
+  by anonymous search
+  by * break
+olcAccess: to dn.one="ou=groups,dc=r1,dc=internal"
+  attrs=entry,cn,uniqueMember,objectClass
+  by anonymous read
+  by * break
+# self can modify own entry, authenticated users can
+# read all entries
+olcAccess: to dn.base="ou=users,dc=r1,dc=internal"
+  by * search
+olcAccess: to dn.one="ou=users,dc=r1,dc=internal"
+  by self write
+  by users read
+  by * search
