@@ -42,6 +42,8 @@ def user2_slapd():
 
 
 def test_anon_list_users(anon_slapd):
+    """anonymous should be able to list ou=users"""
+
     have = dict(
         anon_slapd.search_s(
             "ou=users,dc=r1,dc=internal", ldap.SCOPE_SUBTREE, "objectclass=*"
@@ -62,6 +64,8 @@ def test_anon_list_users(anon_slapd):
 
 
 def test_anon_list_groups(anon_slapd):
+    """anonymous should be able to list ou=groups"""
+
     have = dict(
         anon_slapd.search_s(
             "ou=groups,dc=r1,dc=internal", ldap.SCOPE_SUBTREE, "objectclass=*"
@@ -79,6 +83,8 @@ def test_anon_list_groups(anon_slapd):
 
 
 def test_sssd_list_users(sssd_slapd):
+    """sssd should be able to list users including userPassword attribute"""
+
     have = dict(
         sssd_slapd.search_s(
             "ou=users,dc=r1,dc=internal", ldap.SCOPE_SUBTREE, "objectclass=*"
@@ -99,6 +105,8 @@ def test_sssd_list_users(sssd_slapd):
 
 
 def test_sssd_list_groups(sssd_slapd):
+    """sssd should be able to list groups"""
+
     have = dict(
         sssd_slapd.search_s(
             "ou=groups,dc=r1,dc=internal", ldap.SCOPE_SUBTREE, "objectclass=*"
@@ -116,6 +124,8 @@ def test_sssd_list_groups(sssd_slapd):
 
 
 def test_user1_list_users(user1_slapd):
+    """user1 should be able to list ou=users and contained ous"""
+
     have = dict(
         user1_slapd.search_s(
             "ou=users,dc=r1,dc=internal", ldap.SCOPE_SUBTREE, "objectclass=*"
@@ -136,6 +146,8 @@ def test_user1_list_users(user1_slapd):
 
 
 def test_user1_list_groups(user1_slapd):
+    """user1 should be able to list ou=groups and contained ous"""
+
     have = dict(
         user1_slapd.search_s(
             "ou=groups,dc=r1,dc=internal", ldap.SCOPE_SUBTREE, "objectclass=*"
@@ -153,6 +165,12 @@ def test_user1_list_groups(user1_slapd):
 
 
 def test_user1_modify_user2(user1_slapd, randstring):
+    """user1 should be able to modify other users
+
+    user1 is a member of cn=root,ou=groups,dc=r1,dc=internal, which
+    is granted write access to the entire dc=r1,dc=internal subtree.
+    """
+
     orig = user1_slapd.search_s(
         "cn=user2,ou=users,dc=r1,dc=internal",
         ldap.SCOPE_BASE,
@@ -178,6 +196,12 @@ def test_user1_modify_user2(user1_slapd, randstring):
 
 
 def test_user2_modify_user1(user2_slapd, randstring):
+    """user2 should not be able to modify user1
+
+    user2 has no privilged access and should not have write access to any
+    other entries
+    """
+
     with pytest.raises(ldap.INSUFFICIENT_ACCESS):
         user2_slapd.modify_s(
             "cn=user1,ou=users,dc=r1,dc=internal",
@@ -186,6 +210,11 @@ def test_user2_modify_user1(user2_slapd, randstring):
 
 
 def test_user2_modify_self(user2_slapd, randstring):
+    """user2 should be able to modify self
+
+    an authenticated user should be able to modify their own entry
+    """
+
     orig = user2_slapd.search_s(
         "cn=user2,ou=users,dc=r1,dc=internal",
         ldap.SCOPE_BASE,
