@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 python-ldap = "*"
 pytest = "*"
+nearly = {git = "https://github.com/larsks/python-nearly"}
 
 [dev-packages]
 

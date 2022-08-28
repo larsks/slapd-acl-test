@@ -1,11 +1,11 @@
-# pylint: disable=no-member,redefined-outer-name,missing-module-docstring
+# pylint: disable=no-member,redefined-outer-name,missing-module-docstring,wrong-import-order
 
+import ldap
+import pytest
 import random
 import string
 
-import pytest
-
-import ldap
+from nearly import Nearly
 
 
 @pytest.fixture
@@ -50,17 +50,11 @@ def test_anon_list_users(anon_slapd):
         )
     )
 
-    # anonymous should not see ou=users (only search access)
-    assert "ou=users,dc=r1,dc=internal" not in have
-
-    # anonymous should be able to see entries in ou=users
-    assert "cn=user1,ou=users,dc=r1,dc=internal" in have
-
-    # anonymous should not be able to see entries in ou=nested,ou=nsers
-    assert "cn=testuser,ou=nested,ou=users,dc=r1,dc=internal" not in have
-
-    # anonymous should not be able to see userPassword attribute
-    assert not any("userPassword" in x for x in have.values())
+    assert Nearly(have) == {
+        "cn=user1,ou=users,dc=r1,dc=internal": {"sn": ..., "cn": ...},
+        "cn=user2,ou=users,dc=r1,dc=internal": {"sn": ..., "cn": ...},
+        "ou=nested,ou=users,dc=r1,dc=internal": ...,
+    }
 
 
 def test_anon_list_groups(anon_slapd):
@@ -72,14 +66,10 @@ def test_anon_list_groups(anon_slapd):
         )
     )
 
-    # anonymous should not see ou=groups (only search access)
-    assert "ou=groups,dc=r1,dc=internal" not in have
-
-    # anonymous should see entries in ou=groups
-    assert "cn=root,ou=groups,dc=r1,dc=internal" in have
-
-    # anonymous should not see entries in ou=nested,ou=groups
-    assert "cn=testgroup,ou=nested,ou=groups,dc=r1,dc=internal" not in have
+    assert Nearly(have) == {
+        "cn=root,ou=groups,dc=r1,dc=internal": ...,
+        "ou=nested,ou=groups,dc=r1,dc=internal": ...,
+    }
 
 
 def test_sssd_list_users(sssd_slapd):
@@ -91,17 +81,22 @@ def test_sssd_list_users(sssd_slapd):
         )
     )
 
-    # sssd should be able to see ou=users entry
-    assert "ou=users,dc=r1,dc=internal" in have
-
-    # sssd should be able to see entries in ou=users
-    assert "cn=user1,ou=users,dc=r1,dc=internal" in have
-
-    # sssd should not be able to see entries in ou=nested,ou=users
-    assert "cn=testuser,ou=nested,ou=users,dc=r1,dc=internal" not in have
-
-    # sssd should be able to usee userpassword attribute
-    assert any("userPassword" in x for x in have.values())
+    assert Nearly(have) == {
+        "ou=users,dc=r1,dc=internal": ...,
+        "ou=nested,ou=users,dc=r1,dc=internal": ...,
+        "cn=user1,ou=users,dc=r1,dc=internal": {
+            "objectClass": ...,
+            "sn": ...,
+            "cn": ...,
+            "userPassword": ...,
+        },
+        "cn=user2,ou=users,dc=r1,dc=internal": {
+            "objectClass": ...,
+            "sn": ...,
+            "cn": ...,
+            "userPassword": ...,
+        },
+    }
 
 
 def test_sssd_list_groups(sssd_slapd):
@@ -113,14 +108,11 @@ def test_sssd_list_groups(sssd_slapd):
         )
     )
 
-    # sssd should be able to see ou=groups entry
-    assert "ou=groups,dc=r1,dc=internal" in have
-
-    # sssd should be able to see entries in ou=groups
-    assert "cn=root,ou=groups,dc=r1,dc=internal" in have
-
-    # sssd should not be able to see entries in ou=groups
-    assert "cn=testgroup,ou=nested,ou=groups,dc=r1,dc=internal" not in have
+    assert Nearly(have) == {
+        "ou=groups,dc=r1,dc=internal": ...,
+        "cn=root,ou=groups,dc=r1,dc=internal": ...,
+        "ou=nested,ou=groups,dc=r1,dc=internal": ...,
+    }
 
 
 def test_user1_list_users(user1_slapd):
@@ -132,17 +124,19 @@ def test_user1_list_users(user1_slapd):
         )
     )
 
-    # user1 should be able to see ou=users entry
-    assert "ou=users,dc=r1,dc=internal" in have
-
-    # user1 should be able to see entries in ou=users
-    assert "cn=user1,ou=users,dc=r1,dc=internal" in have
-
-    # user1 should be able to see entries in ou=nested,ou=users
-    assert "cn=testuser,ou=nested,ou=users,dc=r1,dc=internal" in have
-
-    # user1 should be able to usee userpassword attribute
-    assert any("userPassword" in x for x in have.values())
+    assert Nearly(have) == {
+        "ou=users,dc=r1,dc=internal": ...,
+        "cn=user1,ou=users,dc=r1,dc=internal": {
+            "userPassword": ...,
+            ...: None,
+        },
+        "cn=user2,ou=users,dc=r1,dc=internal": {
+            "userPassword": ...,
+            ...: None,
+        },
+        "ou=nested,ou=users,dc=r1,dc=internal": ...,
+        "cn=testuser,ou=nested,ou=users,dc=r1,dc=internal": ...,
+    }
 
 
 def test_user1_list_groups(user1_slapd):
@@ -154,14 +148,12 @@ def test_user1_list_groups(user1_slapd):
         )
     )
 
-    # user1 should be able to see ou=groups entry
-    assert "ou=groups,dc=r1,dc=internal" in have
-
-    # user1 should be able to see entries in ou=groups
-    assert "cn=root,ou=groups,dc=r1,dc=internal" in have
-
-    # user1 should be able to see entries in ou=nested,ou=groups
-    assert "cn=testgroup,ou=nested,ou=groups,dc=r1,dc=internal" in have
+    assert Nearly(have) == {
+        "ou=groups,dc=r1,dc=internal": ...,
+        "cn=root,ou=groups,dc=r1,dc=internal": ...,
+        "ou=nested,ou=groups,dc=r1,dc=internal": ...,
+        "cn=testgroup,ou=nested,ou=groups,dc=r1,dc=internal": ...,
+    }
 
 
 def test_user1_modify_user2(user1_slapd, randstring):
